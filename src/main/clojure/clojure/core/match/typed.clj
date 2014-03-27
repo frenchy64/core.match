@@ -7,16 +7,17 @@
 
 (defn emit-flat 
   [{:keys [rows ocrs] :as m}]
-  `(cond
-     ~@(mapcat
-         (fn [row]
-           [`(and ~@(map (fn [p o] 
-                           (cond
-                             (m/wildcard-pattern? p) true
-                             :else (prtcl/to-source* p o)))
-                         row ocrs))
-            (:action row)])
-         rows)))
+  `(let [~@(mapcat vector ocrs (map :ocr-expr ocrs))]
+     (cond
+       ~@(mapcat
+           (fn [row]
+             [`(and ~@(map (fn [p o] 
+                             (cond
+                               (m/wildcard-pattern? p) true
+                               :else (prtcl/to-source* p o)))
+                           row ocrs))
+              (:action row)])
+           rows))))
 
 (defn flat-clj-form 
   "Translate an unoptimised pattern matrix directly into a cond"
@@ -54,7 +55,7 @@
 
 
 (comment
-(dbg/build-matrix [1 2 3]
+(dbg/m-to-clj [1 2 3]
                   [1 2 3] :foo
                   [2 3 4] :foo1
                   :else 5)
